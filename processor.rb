@@ -37,7 +37,19 @@ class RequireProcessor < SexpProcessor
 
 	def output_gems
 		puts "Found gems :"
-		print @requires.keys.map{ |k| "File #{k}:\n#{ @requires[k].map{ |f| "\t#{f}\n" }.join }" }.join
+		print @requires.keys.map{ |k| "File #{k}:\n#{ @requires[k].map{ |g| "\t#{g}\n" }.join }" }.join
+	end
+
+	def output_digraph
+		out = File.open("output.dot","w")
+		out.write("digraph Gems {\n")
+		@requires.each_key do |k|
+			@requires[k].each do |g|
+				out.write("\t\"#{k}\" -> \"#{g}\";\n")
+			end
+		end
+		out.write("}")
+		out.close
 	end
 end
 
@@ -64,3 +76,4 @@ end
 processor.output_gems
 
 processor.output_files
+processor.output_digraph
