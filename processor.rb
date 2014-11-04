@@ -12,12 +12,12 @@ class RequireProcessor < SexpProcessor
 	end
 
 	def find_requires(file)
-		@current_file  = file                          # store file name 
-		@requires[file] = [] unless @requires[file]    # init key "file" in hash "@requires"
-		input = File.read(file)                        # read file returned as String
-		exp = @parser.parse(input)                      # parse String returned as Sexp
-		self.process(exp)                              # process Sexp
-		@requires[file].uniq!                          # avoid duplications
+		@current_file  = File.basename file                     # store file name 
+		@requires[@current_file] = [] unless @requires[file]    # init key "file" in hash "@requires"
+		input = File.read(file)                                 # read file returned as String
+		exp = @parser.parse(input)                              # parse String returned as Sexp
+		self.process(exp)                                       # process Sexp
+		@requires[@current_file].uniq!                          # avoid duplications
 	end
 
 	def process_call(exp)
