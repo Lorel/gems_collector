@@ -3,33 +3,27 @@ require "ruby2ruby"
 require "pp"
 
 class Injector
+    attr_reader :modules, :out_dir
+
     def initialize( insert_gem_tracking = false )
         @parser = RubyParser.new
         @rubier = Ruby2Ruby.new
+        @modules = []
         @insert_gem_tracking = insert_gem_tracking
+        
+        @out_dir = './spooned'
+        Dir.mkdir out_dir rescue nil
     end
 
-    def browse(directory)
-        files = Dir[directory + "/*"]
-        modules = []
-    	
-    	out_dir = './spooned'
-    	Dir.mkdir(out_dir) rescue nil
-        files.each do |file|
-            if File.directory?(file)
-                modules = modules + browse(file)
-            elsif file.end_with? ".rb"
-                content = File.read(file)
-                tree = @parser.parse(content)
-                insert_init_gem_tracking tree if @insert_gem_tracking
-                modules = modules | browseTree(tree)
-                newFile = out_dir + "/" + File.basename(file)
-                fout = File.new(newFile, "w")
-                fout.write(@rubier.process(tree))
-                fout.close
-            end
-        end
-        modules
+    def browse(file)
+        content = File.read(file)
+        tree = @parser.parse(content)
+        insert_init_gem_tracking tree if @insert_gem_tracking
+        @modules = @modules | browseTree(tree)
+        newFile = @out_dir + "/" + File.basename(file)
+        fout = File.new(newFile, "w")
+        fout.write(@rubier.process(tree))
+        fout.close
     end
 
     def browseTree(tree)
@@ -62,16 +56,23 @@ class Injector
     end
 end
 
-directory = ARGV[0]
-if directory == nil
-    exit 0
+browser = Injector.new( true )
+
+ARGV << "." if ARGV.empty? # add current path if no arg
+
+ARGV.each do |arg|
+    if File.file? arg
+        browser.browse arg
+    elsif File.directory? arg
+        Dir.glob(arg + "/**/*").select{|f| File.extname(f) == ".rb" && ( !f.include? browser.out_dir ) }.each do |filename|
+            browser.browse filename
+        end
+    end
 end
 
-browser = Injector.new( true )
-modules = browser.browse(directory)
- puts("MODULES required : ")   	
+puts("MODULES required : ")   	
 
-for required_module in  modules
+for required_module in  browser.modules
    if required_module.class == Sexp
        pp required_module
     else

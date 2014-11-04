@@ -1,5 +1,5 @@
-require "sexp_processor"
-require "pp"
+require 'sexp_processor'
+require 'pp'
 require 'ruby_parser'
 
 class RequireProcessor < SexpProcessor
@@ -21,10 +21,18 @@ class RequireProcessor < SexpProcessor
 	end
 
 	def process_call(exp)
-		until exp.empty? do
-			if exp.shift === :require
-				sexp = exp.shift
-				@requires[@current_file] << sexp.last
+		exp.shift                                               # pop :call
+		if sexp = exp.shift										# case when second element is a sexp for const or lvar
+			until exp.empty? do
+				exp.shift
+			end
+		else													# case when second element in sexp is nil
+			until exp.empty? do
+				case exp.shift
+				when :require
+					sexp = exp.shift
+					@requires[@current_file] << sexp.last
+				end
 			end
 		end
 		exp
@@ -62,18 +70,16 @@ ARGV << "." if ARGV.empty? # add current path if no arg
 
 ARGV.each do |arg|
 	if File.file? arg
-		pp arg
 		processor.find_requires arg
 	elsif File.directory? arg
-		Dir.new(arg).select{|f| File.extname(f) == ".rb" }.each do |filename|
-			pp filename
-			processor.find_requires( Dir.new(arg).path + "/" + filename )
+		Dir.glob(arg + "/**/*").select{|f| File.extname(f) == ".rb" }.each do |filename|
+			pp (filename)
+			processor.find_requires filename 
 		end
 	end
 end
 
-# process find requires
+# outputs
 processor.output_gems
-
 processor.output_files
 processor.output_digraph
