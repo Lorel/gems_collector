@@ -15,8 +15,12 @@ class RequireProcessor < SexpProcessor
 		@current_file  = File.basename file                     # store file name 
 		@requires[@current_file] = [] unless @requires[file]    # init key "file" in hash "@requires"
 		input = File.read(file)                                 # read file returned as String
-		exp = @parser.parse(input)                              # parse String returned as Sexp
-		self.process(exp)                                       # process Sexp
+		begin
+			exp = @parser.parse(input)                              # parse String returned as Sexp
+			self.process(exp)                                       # process Sexp
+		rescue
+			pp "Error on " + file
+		end
 		@requires[@current_file].uniq!                          # avoid duplications
 	end
 
@@ -53,10 +57,10 @@ class RequireProcessor < SexpProcessor
 		out.write("digraph Gems {\n")
 		@requires.each_key do |k|
 			@requires[k].each do |g|
-				out.write("\t\"#{k}\" -> \"#{g}\";\n")
+				out.write("\t\"#{k}\" -> \"#{g}\";\n") if g.is_a? String
 			end
 		end
-		out.write("}")
+		out.write("rankdir=LR;}")
 		out.close
 	end
 end
@@ -71,6 +75,7 @@ ARGV << "." if ARGV.empty? # add current path if no arg
 ARGV.each do |arg|
 	if File.file? arg
 		processor.find_requires arg
+		pp arg
 	elsif File.directory? arg
 		Dir.glob(arg + "/**/*").select{|f| File.extname(f) == ".rb" }.each do |filename|
 			pp (filename)
@@ -81,5 +86,5 @@ end
 
 # outputs
 processor.output_gems
-processor.output_files
+processor.output_files rescue nil
 processor.output_digraph
