@@ -49,7 +49,7 @@ class RequireProcessor < SexpProcessor
 
 	def output_gems
 		puts "Found gems :"
-		print @requires.keys.map{ |k| "File #{k}:\n#{ @requires[k].map{ |g| "\t#{g}\n" }.join }" }.join
+		print @requires.keys.map{ |k| "File #{k}:\n#{ @requires[k].empty? ? "\tNo require found\n" : @requires[k].map{ |g| "\t#{g}\n" }.join }" }.join
 	end
 
 	def output_digraph
