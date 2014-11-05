@@ -1,0 +1,6 @@
+LOGIN=$(whoami)
+
+export GEM_HOME=/gfs/$LOGIN/.gem/ruby-2.1.2
+export MY_RUBY_HOME=/gfs/$LOGIN/.gem/ruby-2.1.2
+export GEM_PATH=/gfs/$LOGIN/.gem/ruby-2.1.2
+export RUBY_VERSION=ruby-2.1.2

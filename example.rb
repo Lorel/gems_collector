@@ -1,6 +1,6 @@
 require "ruby_parser"
 require "ruby2ruby"
-require "activerecord"
+require "active_record"
 
 class Test
 	def initialize
