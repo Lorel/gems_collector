@@ -1,0 +1,13 @@
+def track_required_gems gem_name
+    File.open("Gemfile.generated", "a"){ |file| file.write "source 'https://rubygems.org'\n\n" } unless File.exist? "Gemfile.generated"
+
+    $old_loaded_specs ||= []
+    File.open("Gemfile.generated", "a") do |file|
+        Gem.loaded_specs.values.reject{ |g| $old_loaded_specs.include? g }.each do |g|
+            file.write "\# Tracked from require \"#{gem_name}\"\n"
+            file.write "gem '#{g.name}', '#{g.version.version}'\n\n"
+        end
+        file.close
+    end
+    $old_loaded_specs = $old_loaded_specs | Gem.loaded_specs.values
+end
